@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">FitnessApp</string>
+    <string name="title_activity_main2">Main2Activity</string>
+    <string name="text">toolbar will take when it reaches it’s collapsed state.
+        I’ll to decide its color. We can also specify the margins for the tit
+        fect toolbar will take when it reaches it’s collapsed state. I’ll be changi
+        I’ll to decide its color. We can also specify the margins for the tit
+        fect toolbar will take when it reaches it’s collapsed state. I’ll be changi
+    </string>
+</resources>

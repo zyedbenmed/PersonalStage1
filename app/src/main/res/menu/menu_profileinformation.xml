@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+
+    <item
+        android:id="@+id/menu_profil_active_members"
+        android:title="Refresh"
+        android:icon="@drawable/ic_refresh_white"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:id="@+id/menu_profil_all_members"
+        android:title="All Members"
+        android:icon="@drawable/ic_grid"
+        app:showAsAction="ifRoom"/>
+
+</menu>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="gray">#9c9da4</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#ed6e6e</color>
+    <color name="black">#000000</color>
+    <color name="white">#ffffff</color>
+    <color name="background">#fafafa</color>
+    <color name="orange">#fdb602</color>
+    <color name="blue">#02aeff</color>
+    <color name="navyblue">#02587f</color>
+    <color name="darkpink">#bc0238</color>
+    <color name="goal_background">#20201f</color>
+
+</resources>
