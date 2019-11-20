@@ -7,23 +7,69 @@
     tools:context="com.example.zyed.fitnessapp.ActiveMembers">
 
 
-    <include
-        android:id="@+id/activemembers_appbar"
-        layout="@layout/appbar_layout" />
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/activemembers_appbarlayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_dashboard_cropped"
+        android:fitsSystemWindows="true"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:layout_constraintBottom_toTopOf="@+id/guideline50"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycleViewContainer"
+        <android.support.design.widget.CollapsingToolbarLayout
+            android:id="@+id/collapsing_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fitsSystemWindows="true"
+            app:contentScrim="@color/cardview_shadow_end_color"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:expandedTitleTextAppearance="@style/TextAppearance.AppCompat.Title">
+
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/activemembers_appbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="pin"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+        </android.support.design.widget.CollapsingToolbarLayout>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v4.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
-        android:persistentDrawingCache="all"
-        android:alwaysDrawnWithCache="true"
-        android:drawingCacheQuality="high"
-        app:layout_constraintTop_toBottomOf="@id/activemembers_appbar"
+        android:clipToPadding="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/activemembers_appbarlayout">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycleViewContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </android.support.v4.widget.NestedScrollView>
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline50"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.25" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline51"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.25
+" />
 
 </android.support.constraint.ConstraintLayout>

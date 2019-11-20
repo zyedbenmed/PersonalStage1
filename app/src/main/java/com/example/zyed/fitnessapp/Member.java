@@ -10,16 +10,20 @@ import android.graphics.drawable.Drawable;
 import com.orm.SugarRecord;
 import com.orm.SugarContext;
 import com.orm.dsl.Ignore;
+import com.orm.dsl.Unique;
+
 import android.widget.ImageView;
 
 
 public class Member extends SugarRecord{
 
-    private String gender, name, email, objective, age, phone, height, clock, time_in , time_out;
+    private String gender, name, email, objective, age, phone, height, clock, time_in , time_out , note;
 
     private byte[] imagev;
     private String weight;
 
+    @Unique
+    private Long id;
 
     @Ignore
     private Bitmap image;
@@ -29,7 +33,7 @@ public class Member extends SugarRecord{
 
     }
 
-    public Member(String gender, String name, String age, String email, String phone, String weight, String height, String objective, byte[] imagev, String clock, String time_in, String time_out) {
+    public Member(String gender, String name, String age, String email, String phone, String weight, String height, String objective, byte[] imagev, String clock, String time_in, String time_out, String note) {
 
         this.gender = gender;
         this.name = name;
@@ -43,6 +47,7 @@ public class Member extends SugarRecord{
         this.clock = clock;
         this.time_in=time_in;
         this.time_out=time_out;
+        this.note = note;
 
     }
 
@@ -56,6 +61,17 @@ public class Member extends SugarRecord{
         this.clock=clock;
     }
 
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(Long id) {
+        // Use "super" to overwrite
+        super.setId(id);
+        this.id = id;
+    }
 
     public String getName() {
         return name;
@@ -159,5 +175,13 @@ public class Member extends SugarRecord{
 
     public void setTime_out(String time_out) {
         this.time_out = time_out;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
     }
 }

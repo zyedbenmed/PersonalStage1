@@ -1,14 +1,20 @@
 package com.example.zyed.fitnessapp;
 
+import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +24,10 @@ import android.widget.Filterable;
 import android.widget.Filter;
 
 import com.bumptech.glide.Glide;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
 import com.orm.SugarContext;
 import com.squareup.picasso.Picasso;
 
@@ -38,6 +48,9 @@ public class CustomRecyclerAdapter extends  RecyclerView.Adapter<CustomRecyclerA
     Context context;
     ArrayList<Member> Members,filterList;
     CustomFilter filter;
+    int i=0;
+    ViewGroup viewGroup;
+    ProgressDialog mProgressDialog;
 
     public CustomRecyclerAdapter(Context context, ArrayList<Member> Members) {
         this.context = context;
@@ -49,6 +62,7 @@ public class CustomRecyclerAdapter extends  RecyclerView.Adapter<CustomRecyclerA
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.members_view, parent, false);
         ViewHolder viewHolder = new ViewHolder(v);
+        viewGroup = parent;
         return viewHolder;
     }
 
@@ -58,6 +72,11 @@ public class CustomRecyclerAdapter extends  RecyclerView.Adapter<CustomRecyclerA
         holder.itemView.setTag(Members.get(position));
 
         Member pu = Members.get(position);
+        String mail = pu.getEmail();
+        Member member = FindMember(mail);
+
+        new GenerateImageasync(holder.pImage , member).execute();
+        //holder.pImage.setImageBitmap(BitmapFactory.decodeByteArray(member.getImagev(), 0, member.getImagev().length));
 
         holder.pName.setText(pu.getName());
         holder.pJobProfile.setText(pu.getEmail());
@@ -66,10 +85,10 @@ public class CustomRecyclerAdapter extends  RecyclerView.Adapter<CustomRecyclerA
             holder.pGreenDot.setVisibility(View.VISIBLE);
         }
 
-        String mail = pu.getEmail();
-        Member member = FindMember(mail);
 
-        GenerateImage(holder.pImage, member);
+
+
+
 
         //Bitmap bmp = BitmapFactory.decodeByteArray(member.getImagev(), 0, member.getImagev().length);
         //Picasso.with(context).load(String.valueOf(member.getImagev())).fit().into(holder.pImage);
@@ -106,7 +125,7 @@ public class CustomRecyclerAdapter extends  RecyclerView.Adapter<CustomRecyclerA
     }
 
 
-        public class ViewHolder extends RecyclerView.ViewHolder{
+    public class ViewHolder extends RecyclerView.ViewHolder{
 
         public TextView pName;
         public TextView pJobProfile;
@@ -195,6 +214,7 @@ public class CustomRecyclerAdapter extends  RecyclerView.Adapter<CustomRecyclerA
 
         String id="1";
 
+
         List<Member> members = Member.listAll(Member.class);
         for(Member member : members){
 
@@ -203,7 +223,24 @@ public class CustomRecyclerAdapter extends  RecyclerView.Adapter<CustomRecyclerA
             }
         }
 
+        i++;
+
+        if(i==getItemCount()){
+            if(ActiveMembers.ActiveProgress){
+                ActiveMembers.mProgressDialog.dismiss();
+            }
+            if(AllMembers.AllProgress){
+                AllMembers.mProgressDialog.dismiss();
+            }
+
+        }
+
+
+
+
         return Member.findById(Member.class, Integer.parseInt(id));
+
+
 
     }
 
@@ -215,38 +252,30 @@ public class CustomRecyclerAdapter extends  RecyclerView.Adapter<CustomRecyclerA
         return Uri.parse(path);
     }
 
-    public   void GenerateImage(final CircleImageView imageView, final Member mm){
+    public  class GenerateImageasync extends AsyncTask<Bitmap, Void, Bitmap> {
 
-        new  AsyncTask<Bitmap, Void, Bitmap>() {
+        CircleImageView imageView;
+        Member mm;
 
-            protected void onPreExecute(){
-                //This could also be an internal resource instead of null
-                //imageView.setImageResource(R.drawable.default_profil);
-                return;
-            }
+        GenerateImageasync(CircleImageView imageView, Member mm){
+            this.imageView=imageView;
+            this.mm=mm;
+        }
 
-            @Override
-            protected Bitmap doInBackground(Bitmap... params) {
+        @Override
+        protected Bitmap doInBackground(Bitmap... bitmaps) {
+            Bitmap bmp = BitmapFactory.decodeByteArray(mm.getImagev(), 0, mm.getImagev().length);
+            return bmp;
+        }
 
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
 
-                Bitmap bmp = BitmapFactory.decodeByteArray(mm.getImagev(), 0, mm.getImagev().length);
-                return bmp;
+            Glide.with(context).load(bitmap).thumbnail(0.1f).into(imageView);
+            //imageView.setImageBitmap(bitmap);
 
-            }
-
-            @Override
-            protected void onPostExecute(Bitmap result) {
-                super.onPostExecute(result);
-                imageView.setImageBitmap(result);
-                //Picasso.with(context).load(getImageUri(context, result)).placeholder(R.drawable.default_profil).into(imageView);
-
-                //Glide.with(context).load(getImageUri(context, result)).into(imageView);
-
-            }
-
-        }.execute();
-
+        }
     }
-
 
 }

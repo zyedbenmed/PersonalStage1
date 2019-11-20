@@ -3,6 +3,7 @@ package com.example.zyed.fitnessapp;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,6 +15,7 @@ import android.graphics.drawable.Drawable;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.RequiresApi;
@@ -32,6 +34,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Window;
 import android.widget.TextView;
@@ -92,7 +95,10 @@ public class Profile extends AppCompatActivity {
     public final static int QRcodeWidth = 500;
     TextView name;
     Bitmap bitmap;
+    ImageView iv_qr;
     Member member;
+    TextView tv_note;
+    String allDATA, note;
     ImageView pic;
     String path;
     String formattedDate , formattedTime , formattedTime_in="" , formattedTime_out="";
@@ -103,6 +109,7 @@ public class Profile extends AppCompatActivity {
     Drawable toolbar_drawable;
     SimpleDateFormat time_in = null , time_out = null;
     java.util.Date c = Calendar.getInstance().getTime();
+    private ProgressDialog mProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +117,6 @@ public class Profile extends AppCompatActivity {
         setContentView(R.layout.activity_profile);
 
         SugarContext.init(this);
-
 
 
         CardView cardView =findViewById(R.id.c1);
@@ -180,7 +186,12 @@ public class Profile extends AppCompatActivity {
                 Bundle extras4 = getIntent().getExtras();
                 member_id_Goal = extras4.getString("idFromGoals");
                 IdFinal = Integer.parseInt(member_id_Goal);
-        } else {
+        }else if(getIntent().hasExtra("idFromInfo")) {
+
+            Bundle extras5 = getIntent().getExtras();
+            member_id_Goal = extras5.getString("idFromInfo");
+            IdFinal = Integer.parseInt(member_id_Goal);
+        }else {
             Bundle extras3 = getIntent().getExtras();
             member_id_Adapter = extras3.getString("adapter_id");
             IdFinal = Integer.parseInt(member_id_Adapter);
@@ -201,7 +212,59 @@ public class Profile extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                Toast.makeText(Profile.this, "Did not complete", Toast.LENGTH_SHORT).show();
+
+                AlertDialog.Builder builder_note = new AlertDialog.Builder(Profile.this);
+
+                LayoutInflater inflater = getLayoutInflater();
+
+                View dialogView = inflater.inflate(R.layout.alert_dialog_general_note,null);
+                builder_note.setView(dialogView);
+
+                final EditText ed_note =dialogView.findViewById(R.id.ed_note);
+                final Button btn_positive_note = dialogView.findViewById(R.id.btn_add_note);
+                final Button btn_negative_note = dialogView.findViewById(R.id.btn_cancel_note);
+
+
+                final AlertDialog alertDialog = builder_note.create();
+
+                alertDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+
+
+
+                ed_note.setHint(member.getNote());
+
+                btn_positive_note.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        //cpu_member = pu.getMember();
+
+                        note = ed_note.getText().toString();
+
+                        if(Empty(note)) {
+                            ed_note.setError("Enter your note here");
+                            ed_note.requestFocus();
+                        }
+
+                        member.setNote(note);
+                        member.save();
+
+                        alertDialog.cancel();
+
+                        Toast.makeText(Profile.this, "Note added successfully", Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+
+                btn_negative_note.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        alertDialog.dismiss();
+
+                    }
+                });
+
+                alertDialog.show();
 
             }
         });
@@ -218,6 +281,7 @@ public class Profile extends AppCompatActivity {
                         time_in = new SimpleDateFormat("HH:mm");
                         formattedTime_in = time_in.format(c);
                         member.setTime_in(formattedTime_in);
+                        member.setTime_out("");
                         member.save();
 
                     }
@@ -337,20 +401,20 @@ public class Profile extends AppCompatActivity {
                 builder_photo.setView(dialogView);
 
 
-                ImageView iv_qr =dialogView.findViewById(R.id.qrimage);
+                iv_qr =dialogView.findViewById(R.id.qrimage);
                 Button btn_positive = dialogView.findViewById(R.id.btn_done);
+                iv_qr.setImageResource(R.drawable.loading);
 
-                final String allDATA = member.getGender() + "/" + member.getName() + "/" + member.getAge() + "/" + member.getEmail()
+                allDATA = member.getGender() + "/" + member.getName() + "/" + member.getAge() + "/" + member.getEmail()
                         + "/" + member.getPhone() + "/" + member.getHeight() + "/" + member.getWeight() + "/" + member.getObjective();
 
-                try {
-                    bitmap = TextToImageEncode(allDATA);
-                    //Toast.makeText(Creation2.this, allDATA, Toast.LENGTH_SHORT).show();
+                new GenerateImageasync(allDATA).execute();
 
-                } catch (WriterException e) {
-                    e.printStackTrace();
-                }
-
+               /* mProgressDialog = new ProgressDialog(Profile.this);
+                mProgressDialog.setTitle("Loading QR Code...");
+                mProgressDialog.setMessage("Please wait this should take a couple of seconds");
+                mProgressDialog.setCanceledOnTouchOutside(false);
+                mProgressDialog.show();*/
 
 
 
@@ -369,7 +433,7 @@ public class Profile extends AppCompatActivity {
                     }
                 });
 
-                iv_qr.setImageBitmap(bitmap);
+                //iv_qr.setImageBitmap(bitmap);
                 alertDialog.show();
 
 
@@ -433,20 +497,27 @@ public class Profile extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                if (ContextCompat.checkSelfPermission(Profile.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(Profile.this,
-                            new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                            REQUEST_WRITE);
-                }
-                else{
+                    if (ContextCompat.checkSelfPermission(Profile.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(Profile.this,
+                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                REQUEST_WRITE);
+                    } else {CreatePDF(member);}
 
-                    CreatePDF(member);
                 }
-            }
+
+
         });
 
 
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(keyCode== KeyEvent.KEYCODE_BACK) {
+            return false;
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
 
@@ -567,8 +638,8 @@ public class Profile extends AppCompatActivity {
                 dir.mkdirs();
 
             //file name = Document+UniqueID.pdf
-            String ID = IdSelector(UUID.randomUUID().toString());
-            pdfName = "Document" + ID + ".pdf";
+            //String ID = IdSelector(UUID.randomUUID().toString());
+            pdfName = "Document_" + member.getName()+ ".pdf";
             File file = new File(dir, pdfName);
             FileOutputStream fOut = new FileOutputStream(file);
             PdfWriter.getInstance(doc, fOut);
@@ -746,6 +817,24 @@ public class Profile extends AppCompatActivity {
             Table_Goals_Header.addCell(Cell_goal_Title);
             doc.add(Table_Goals_Header);
 
+
+            //table for overall note
+            if (!member.getNote().equals("empty")) {
+                PdfPTable Table_overallNote = new PdfPTable(1);
+
+                Paragraph Paragr_note = new Paragraph("Overall Remarque:  "
+                        + member.getNote(), FontFactory.getFont(FontFactory.COURIER_BOLD, 12));
+
+                PdfPCell Cell_note = new PdfPCell(Paragr_note);
+                Cell_note.setHorizontalAlignment(Element.ALIGN_LEFT);
+                Cell_note.setBorderWidth(0);
+                Cell_note.setPaddingTop(10);
+                Cell_note.setPaddingBottom(15);
+                Table_overallNote.addCell(Cell_note);
+                doc.add(Table_overallNote);
+            }
+
+
             //table for check_in/out
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                 PdfPTable Table_Check = new PdfPTable(1);
@@ -892,5 +981,106 @@ public class Profile extends AppCompatActivity {
             doc.close();
         }
     }
+
+    public  class GenerateImageasync extends AsyncTask<Bitmap, Void, Bitmap> {
+
+        String val;
+
+        GenerateImageasync(String val){ this.val=val; }
+
+        @Override
+        protected Bitmap doInBackground(Bitmap... bitmaps) {
+            BitMatrix bitMatrix = null;
+            try {
+                bitMatrix = new MultiFormatWriter().encode(
+                        val,
+                        BarcodeFormat.DATA_MATRIX.QR_CODE,
+                        QRcodeWidth, QRcodeWidth, null
+                );
+
+            } catch (IllegalArgumentException Illegalargumentexception) {
+
+                return null;
+            } catch (WriterException e) {
+                e.printStackTrace();
+            }
+            int bitMatrixWidth = bitMatrix.getWidth();
+
+            int bitMatrixHeight = bitMatrix.getHeight();
+
+            int[] pixels = new int[bitMatrixWidth * bitMatrixHeight];
+
+            for (int y = 0; y < bitMatrixHeight; y++) {
+                int offset = y * bitMatrixWidth;
+
+                for (int x = 0; x < bitMatrixWidth; x++) {
+
+                    pixels[offset + x] = bitMatrix.get(x, y) ?
+                            getResources().getColor(R.color.black) : getResources().getColor(R.color.white);
+                }
+            }
+            Bitmap bitmap1 = Bitmap.createBitmap(bitMatrixWidth, bitMatrixHeight, Bitmap.Config.ARGB_4444);
+
+            bitmap1.setPixels(pixels, 0, 500, 0, 0, bitMatrixWidth, bitMatrixHeight);
+
+            // **********************
+
+
+            return bitmap1;
+        }
+
+        protected void onPostExecute( Bitmap result )  {
+
+
+            iv_qr.setImageBitmap(result);
+
+            //bitmap.compress(Bitmap.CompressFormat.JPEG, 100, result);
+            //bitmap = result;
+/*
+            if (ContextCompat.checkSelfPermission(SpalshScreen.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(SpalshScreen.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_WRITE);
+
+                //mProgressDialog.dismiss();
+            } else {
+
+                SaveBitmap(bitmap);
+                //mProgressDialog.dismiss();
+            }
+*/
+
+
+            //mProgressDialog.dismiss();
+
+
+
+/*
+            if(!permission){
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Magic here
+                    }
+                }, 5000); // Millisecond 1000 = 1 sec
+
+
+
+                Toast.makeText(SpalshScreen.this, String.valueOf(permission), Toast.LENGTH_SHORT).show();
+            }
+            Toast.makeText(SpalshScreen.this, String.valueOf(permission), Toast.LENGTH_SHORT).show();
+            String id = member.getId().toString();
+            Intent toMain = new Intent(SpalshScreen.this, MainActivity.class);
+            Bundle extras = new Bundle();
+            extras.putString("id", id);
+            toMain.putExtras(extras);
+            startActivity(toMain);
+*/
+        }
+    }
+
+
 
 }

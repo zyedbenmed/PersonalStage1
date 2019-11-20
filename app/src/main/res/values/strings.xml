@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">FitnessApp</string>
+    <string name="app_name">The Coach</string>
     <string name="title_activity_main2">Main2Activity</string>
     <string name="text">toolbar will take when it reaches it’s collapsed state.
         I’ll to decide its color. We can also specify the margins for the tit

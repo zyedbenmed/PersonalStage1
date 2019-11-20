@@ -48,7 +48,6 @@
         android:id="@+id/main_btn_scan"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
         android:background="@drawable/button_style_full"
         android:drawableLeft="@drawable/ic_scan"
         android:text="scan"
@@ -57,7 +56,7 @@
         app:layout_constraintEnd_toStartOf="@+id/guideline28"
         app:layout_constraintStart_toStartOf="@+id/guideline27" />
 
-<!--button to reset db -->
+    <!--button to reset db -->
     <Button
         android:id="@+id/reset"
         android:layout_width="wrap_content"
@@ -120,21 +119,38 @@
 
     <Button
         android:id="@+id/btn_export"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/button_style_empty"
         android:text="export"
+        android:textColor="@color/white"
+        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/main_btn_allmembers"
+        app:layout_constraintEnd_toStartOf="@+id/guideline23"
         app:layout_constraintStart_toStartOf="@+id/guideline27" />
 
     <Button
         android:id="@+id/btn_import"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/button_style_empty"
         android:text="import"
+        android:textColor="@color/white"
+        android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/main_btn_allmembers"
-        app:layout_constraintEnd_toStartOf="@+id/guideline31" />
+        app:layout_constraintEnd_toStartOf="@+id/guideline28"
+        app:layout_constraintStart_toStartOf="@+id/guideline23" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline23"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
 
 
 </android.support.constraint.ConstraintLayout>

@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.support.v4.app.NavUtils;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Filter;
+import android.widget.ImageView;
 
 import com.orm.SugarContext;
 
@@ -39,11 +41,8 @@ public class AttendanceList extends AppCompatActivity implements SearchView.OnQu
 
         RecyclerView recyclerView =  findViewById(R.id.recycleViewContainera);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setItemViewCacheSize(1000);
-        recyclerView.setDrawingCacheEnabled(true);
-        recyclerView.buildDrawingCache();
-        recyclerView.buildDrawingCache(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        recyclerView.setNestedScrollingEnabled(false);
 
         layoutManager = new LinearLayoutManager(this);
 
@@ -98,6 +97,8 @@ public class AttendanceList extends AppCompatActivity implements SearchView.OnQu
 
         MenuItem searchItem = menu.findItem(R.id.menu_search_attendance);
         SearchView searchView = (SearchView) searchItem.getActionView();
+        ImageView searchIcon = searchView.findViewById(android.support.v7.appcompat.R.id.search_button);
+        searchIcon.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),R.drawable.ic_search));
 
         //Insert a Hint to the searchBar
         searchView.setQueryHint("Enter member name");

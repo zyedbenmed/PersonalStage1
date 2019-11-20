@@ -1,9 +1,11 @@
 package com.example.zyed.fitnessapp;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -37,23 +39,31 @@ public class AllMembers extends AppCompatActivity implements SearchView.OnQueryT
     Filter filterResult;
     CustomRecyclerAdapter customRecyclerAdapter;
     RecyclerView.LayoutManager layoutManager;
+    RecyclerView recyclerView;
+    static ProgressDialog mProgressDialog;
+    static boolean AllProgress = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_all_members);
 
-        RecyclerView recyclerView =  findViewById(R.id.recycleViewContainerg);
+        recyclerView =  findViewById(R.id.recycleViewContainerg);
         recyclerView.setHasFixedSize(true);
-        recyclerView.setItemViewCacheSize(20);
+        //recyclerView.setItemViewCacheSize(20);
         recyclerView.setDrawingCacheEnabled(true);
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
 
         layoutManager = new GridLayoutManager(this,2);
 
         recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setNestedScrollingEnabled(false);
 
-        customRecyclerAdapter = new CustomRecyclerAdapter(this, getMember());
+        new GenerateImageasync(customRecyclerAdapter).execute();
+
+
+        /*customRecyclerAdapter = new CustomRecyclerAdapter(this, getMember());
 
         customRecyclerAdapter.setHasStableIds(true);
 
@@ -61,7 +71,7 @@ public class AllMembers extends AppCompatActivity implements SearchView.OnQueryT
 
 
 
-        filterResult = customRecyclerAdapter.getFilter();
+        filterResult = customRecyclerAdapter.getFilter();*/
 
         //Define the gridView
         //GridView gridView = findViewById(R.id.allmembers_gridview);
@@ -76,7 +86,7 @@ public class AllMembers extends AppCompatActivity implements SearchView.OnQueryT
         setSupportActionBar(myToolbar);
 
         // Get a support ActionBar corresponding to this toolbar
-        getSupportActionBar().setTitle("All Members");
+        getSupportActionBar().setTitle("");
 
         // Enable the Up button
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -199,6 +209,49 @@ public class AllMembers extends AppCompatActivity implements SearchView.OnQueryT
 
         return memberArrayList;
     }
+
+    public  class GenerateImageasync extends AsyncTask<Void, Void, CustomRecyclerAdapter> {
+
+        CustomRecyclerAdapter customRecyclerAdapter;
+
+        GenerateImageasync(CustomRecyclerAdapter customRecyclerAdapter){ this.customRecyclerAdapter = customRecyclerAdapter; }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            mProgressDialog = new ProgressDialog(AllMembers.this);
+            mProgressDialog.setTitle("Loading full list...");
+            mProgressDialog.setMessage("Please wait while we load and set the list.");
+            mProgressDialog.setCanceledOnTouchOutside(false);
+            mProgressDialog.show();
+            AllProgress = true;
+        }
+
+        @Override
+        protected CustomRecyclerAdapter doInBackground(Void... voids) {
+
+            customRecyclerAdapter = new CustomRecyclerAdapter(getApplicationContext(), getMember());
+
+            return customRecyclerAdapter;
+
+        }
+
+        @Override
+        protected void onPostExecute(CustomRecyclerAdapter customRecyclerAdapter) {
+            super.onPostExecute(customRecyclerAdapter);
+
+            customRecyclerAdapter.setHasStableIds(true);
+
+            recyclerView.setAdapter(customRecyclerAdapter);
+
+            filterResult = customRecyclerAdapter.getFilter();
+
+            //mProgressDialog.dismiss();
+
+        }
+    }
+
 
 }
 

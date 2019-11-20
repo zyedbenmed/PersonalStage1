@@ -9,8 +9,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -19,6 +21,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -49,12 +52,14 @@ public class Creation2 extends AppCompatActivity {
     static boolean isImageExist=false , PicEmpty;
     static final int REQUEST_IMAGE_CAPTURE = 1 ,RESULT_LOAD_IMG = 3;;
     String gender, name, age, mail, phone, height, weight, objective, member_id ,
-            clock ="empty" , time_in="" , time_out="";
-
+            clock ="empty" , time_in="" , time_out="" , note="empty";
+    String allDATA;
+    Button btn_save;
+    String data;
     EditText ed_weight, ed_height;
     Spinner spinner;
     TextView tv_create , tv_height , tv_weight , ed_objective;
-    Button b_next, b_save , b_confirm;
+    Button b_next, b_confirm;
     ImageView QRimage;
     Bitmap bitmap, profil_image;
     public final static int QRcodeWidth = 500 , MaxWidth = 720 , MaxHeight = 1080;
@@ -86,22 +91,52 @@ public class Creation2 extends AppCompatActivity {
        // QRimage = findViewById(R.id.qrimage);
         ed_objective = findViewById(R.id.creation2_ed_objective);
         b_next = findViewById(R.id.creation2_btn_next);
-        b_save = findViewById(R.id.creation2_btn_save);
         b_confirm = findViewById(R.id.creation2_btn_confirm);
 
         // Generate unique ID  w/ length = 6
         final String ID = IdSelector(UUID.randomUUID().toString());
 
-        final String data = gender + "/" + name + "/" + age + "/" + mail + "/" + phone;
+        data = gender + "/" + name + "/" + age + "/" + mail + "/" + phone;
 
 
         List<String> spinnerArray =  new ArrayList<String>();
+        spinnerArray.add("Select an objective");
         spinnerArray.add("Gain weight/muscle");
-        spinnerArray.add("Loose weight/fat");
+        spinnerArray.add("Lose weight/fat");
         spinnerArray.add("Stay fit");
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                this, R.layout.spinner_objective, spinnerArray);
+                this, R.layout.spinner_objective, spinnerArray){
+            @Override
+            public boolean isEnabled(int position) {
+                if(position == 0)
+                {
+                    // Disable the first item from Spinner
+                    // First item will be use for hint
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            @Override
+            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getDropDownView(position, convertView, parent);
+                TextView tv = (TextView) view;
+                if(position == 0){
+                    // Set the hint text color gray
+                    tv.setTextColor(Color.GRAY);
+                }
+                else {
+                    tv.setTextColor(Color.BLACK);
+                }
+                return view;
+            }
+
+        };
+
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner = findViewById(R.id.sp_objective);
         spinner.setAdapter(adapter);
@@ -109,6 +144,7 @@ public class Creation2 extends AppCompatActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener(){
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id){
                 switch (parent.getItemAtPosition(position).toString()){
+                    case "Select an objective": objective = "nothing"; break;
                     case "Gain weight/muscle": objective="gain";break;
                     case "Loose weight/fat": objective="loose";break;
                     case "Stay fit": objective="maintain";break;
@@ -187,7 +223,7 @@ public class Creation2 extends AppCompatActivity {
                             Bitmap icon = BitmapFactory.decodeResource(Creation2.this.getResources(),
                                     R.drawable.default_profil);
                             imagev = getBytes(icon);
-                            Toast.makeText(Creation2.this, "default image has been set", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Creation2.this, "Default Image set", Toast.LENGTH_SHORT).show();
 
                             tv_height.setVisibility(View.GONE);
                             tv_weight.setVisibility(View.GONE);
@@ -232,7 +268,7 @@ public class Creation2 extends AppCompatActivity {
                 //member.save();
                 //member_id = member.getId().toString();
 
-                final String allDATA = data + "/" + height + "/" + weight + "/" + objective;
+                allDATA = data + "/" + height + "/" + weight + "/" + objective;
 
                 AlertDialog.Builder builder_photo = new AlertDialog.Builder(Creation2.this);
                 LayoutInflater inflater = getLayoutInflater();
@@ -244,8 +280,9 @@ public class Creation2 extends AppCompatActivity {
                 final TextView title2 =dialogView.findViewById(R.id.qrtext);
                 final Button btn_qr_code = dialogView.findViewById(R.id.btn_qr);
                 final Button btn_id_code = dialogView.findViewById(R.id.btn_id);
-                final Button btn_save = dialogView.findViewById(R.id.btn_save);
+                btn_save = dialogView.findViewById(R.id.btn_save);
                 QRimage = dialogView.findViewById(R.id.qrimage);
+                QRimage.setImageResource(R.drawable.loading);
 
                 final AlertDialog alertDialog = builder_photo.create();
 
@@ -256,30 +293,25 @@ public class Creation2 extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         //alertDialog.cancel();
-                        try {
-                            bitmap = TextToImageEncode(allDATA);
-                            //Toast.makeText(Creation2.this, allDATA, Toast.LENGTH_SHORT).show();
-
-                        } catch (WriterException e) {
-                            e.printStackTrace();
-                        }
 
                         title.setVisibility(View.GONE);
                         btn_id_code.setVisibility(View.GONE);
                         btn_qr_code.setVisibility(View.GONE);
-
                         title2.setVisibility(View.VISIBLE);
                         QRimage.setVisibility(View.VISIBLE);
-                        btn_save.setVisibility(View.VISIBLE);
 
-                        QRimage.setImageBitmap(bitmap);
+                        new GenerateImageasync(allDATA).execute();
+
+
+
+                        //QRimage.setImageBitmap(bitmap);
 
                         btn_save.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
                                 alertDialog.cancel();
                                 PicEmpty = (imagev ==null);
-                                Member member = new Member(gender, name, age, mail, phone, weight, height, objective, imagev, clock, time_in, time_out);
+                                Member member = new Member(gender, name, age, mail, phone, weight, height, objective, imagev, clock, time_in, time_out, note);
                                 member.save();
                                 member_id = member.getId().toString();
                                 Intent CrtoProfil = new Intent(Creation2.this, Profile.class);
@@ -342,19 +374,6 @@ public class Creation2 extends AppCompatActivity {
                 builder.show();
 
                 */
-            }
-        });
-
-        b_save.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PicEmpty = (imagev ==null);
-                Intent CrtoProfil = new Intent(Creation2.this, Profile.class);
-                Bundle extras = new Bundle();
-                extras.putString("id", member_id);
-               // Toast.makeText(Creation2.this, member_id, Toast.LENGTH_SHORT).show();
-                CrtoProfil.putExtras(extras);
-                startActivity(CrtoProfil);
             }
         });
     }
@@ -420,7 +439,7 @@ public class Creation2 extends AppCompatActivity {
             profil_image = (Bitmap) extras.get("data");
             imagev = getBytes(profil_image);
             PicEmpty = (imagev == null);
-            Toast.makeText(this, "image has been set", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Image set", Toast.LENGTH_SHORT).show();
             if(!PicEmpty){
 
                 tv_height.setVisibility(View.GONE);
@@ -451,7 +470,7 @@ public class Creation2 extends AppCompatActivity {
 
                 PicEmpty = (imagev == null);
 
-                Toast.makeText(this, "image has been set", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Image set", Toast.LENGTH_SHORT).show();
                 if(!PicEmpty){
                     tv_height.setVisibility(View.GONE);
                     tv_weight.setVisibility(View.GONE);
@@ -510,5 +529,105 @@ public class Creation2 extends AppCompatActivity {
 
         }
 
+    }
+
+    public  class GenerateImageasync extends AsyncTask<Bitmap, Void, Bitmap> {
+
+        String val;
+
+        GenerateImageasync(String val){ this.val=val; }
+
+        @Override
+        protected Bitmap doInBackground(Bitmap... bitmaps) {
+            BitMatrix bitMatrix = null;
+            try {
+                bitMatrix = new MultiFormatWriter().encode(
+                        val,
+                        BarcodeFormat.DATA_MATRIX.QR_CODE,
+                        QRcodeWidth, QRcodeWidth, null
+                );
+
+            } catch (IllegalArgumentException Illegalargumentexception) {
+
+                return null;
+            } catch (WriterException e) {
+                e.printStackTrace();
+            }
+            int bitMatrixWidth = bitMatrix.getWidth();
+
+            int bitMatrixHeight = bitMatrix.getHeight();
+
+            int[] pixels = new int[bitMatrixWidth * bitMatrixHeight];
+
+            for (int y = 0; y < bitMatrixHeight; y++) {
+                int offset = y * bitMatrixWidth;
+
+                for (int x = 0; x < bitMatrixWidth; x++) {
+
+                    pixels[offset + x] = bitMatrix.get(x, y) ?
+                            getResources().getColor(R.color.black) : getResources().getColor(R.color.white);
+                }
+            }
+            Bitmap bitmap1 = Bitmap.createBitmap(bitMatrixWidth, bitMatrixHeight, Bitmap.Config.ARGB_4444);
+
+            bitmap1.setPixels(pixels, 0, 500, 0, 0, bitMatrixWidth, bitMatrixHeight);
+
+            // **********************
+
+
+            return bitmap1;
+        }
+
+        protected void onPostExecute( Bitmap result )  {
+
+
+            QRimage.setImageBitmap(result);
+            btn_save.setVisibility(View.VISIBLE);
+
+            //bitmap.compress(Bitmap.CompressFormat.JPEG, 100, result);
+            //bitmap = result;
+/*
+            if (ContextCompat.checkSelfPermission(SpalshScreen.this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(SpalshScreen.this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        REQUEST_WRITE);
+
+                //mProgressDialog.dismiss();
+            } else {
+
+                SaveBitmap(bitmap);
+                //mProgressDialog.dismiss();
+            }
+*/
+
+
+            //mProgressDialog.dismiss();
+
+
+
+/*
+            if(!permission){
+
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        // Magic here
+                    }
+                }, 5000); // Millisecond 1000 = 1 sec
+
+
+
+                Toast.makeText(SpalshScreen.this, String.valueOf(permission), Toast.LENGTH_SHORT).show();
+            }
+            Toast.makeText(SpalshScreen.this, String.valueOf(permission), Toast.LENGTH_SHORT).show();
+            String id = member.getId().toString();
+            Intent toMain = new Intent(SpalshScreen.this, MainActivity.class);
+            Bundle extras = new Bundle();
+            extras.putString("id", id);
+            toMain.putExtras(extras);
+            startActivity(toMain);
+*/
+        }
     }
 }

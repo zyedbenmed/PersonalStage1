@@ -49,6 +49,7 @@ public class GoalsActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow);
 
+
         Bundle extras = getIntent().getExtras();
         String member_id = extras.getString("idFromProfile");
         IdFinal = Integer.parseInt(member_id);
@@ -74,6 +75,7 @@ public class GoalsActivity extends AppCompatActivity {
             customRecyclerAdapter.setHasStableIds(true);
 
             recyclerView.setAdapter(customRecyclerAdapter);
+            recyclerView.setNestedScrollingEnabled(false);
 
 
 

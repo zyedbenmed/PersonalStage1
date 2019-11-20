@@ -74,17 +74,17 @@ public class ProfileInformation extends AppCompatActivity {
         SugarContext.init(this);
 
         // Define the Toolbar as the new Actionbar
-        Toolbar myToolbar = findViewById(R.id.profil_appbar);
+        Toolbar myToolbar = findViewById(R.id.allmembers_appbar);
         setSupportActionBar(myToolbar);
 
         // Get a support ActionBar corresponding to this toolbar
-        getSupportActionBar().setTitle("Profile");
+        getSupportActionBar().setTitle("");
 
         // Enable the Up button
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         //Change the back button on the action bar to a custom drawable
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_arrow_white);
 
         // to know which activity initiated the intent
 
@@ -617,7 +617,11 @@ public class ProfileInformation extends AppCompatActivity {
                 Toast.makeText(this, "Please add/update a photo !! ", Toast.LENGTH_SHORT).show();
             }
             else {
-                NavUtils.navigateUpFromSameTask(this);
+                Intent toProfil = new Intent(ProfileInformation.this,Profile.class);
+                Bundle extras = new Bundle();
+                extras.putString("idFromInfo", String.valueOf(IdFinal));
+                toProfil.putExtras(extras);
+                startActivity(toProfil);
             }
         }
 

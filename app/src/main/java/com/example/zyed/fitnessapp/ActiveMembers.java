@@ -1,9 +1,13 @@
 package com.example.zyed.fitnessapp;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.provider.MediaStore;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,31 +15,22 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AbsListView;
-import android.widget.ListView;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.BaseAdapter;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import android.widget.TextView;
-import android.widget.ImageView;
-import android.widget.Toast;
-import android.widget.Filterable;
 import android.widget.Filter;
-import com.orm.SugarRecord;
+import android.widget.Filterable;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 import com.orm.SugarContext;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.DelayQueue;
-import java.util.concurrent.TimeUnit;
-
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -43,35 +38,53 @@ public class ActiveMembers extends AppCompatActivity implements SearchView.OnQue
 
     Filter filterResult ;
     Member m;
-    CustomAdapter adapter;
 
     //RecyclerView recyclerView;
     RecyclerView.Adapter mAdapter;
     CustomRecyclerAdapter customRecyclerAdapter;
     RecyclerView.LayoutManager layoutManager;
-
+    RecyclerView recyclerView;
     List<Member> personUtilsList;
+    static ProgressDialog mProgressDialog;
+    static boolean ActiveProgress=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_active_members);
 
-        SugarContext.init(this);
+        // Define the Toolbar as the new Actionbar
+        Toolbar myToolbar = findViewById(R.id.activemembers_appbar);
+        setSupportActionBar(myToolbar);
 
-        RecyclerView recyclerView =  findViewById(R.id.recycleViewContainer);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setItemViewCacheSize(1000);
-        recyclerView.setDrawingCacheEnabled(true);
-        recyclerView.buildDrawingCache();
-        recyclerView.buildDrawingCache(true);
-        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        // Get a support ActionBar corresponding to this toolbar
+        getSupportActionBar().setTitle("");
+
+        // Enable the Up button
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        //Change the back button on the action bar to a custom drawable
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home);
+
+        SugarContext.init(this);
 
         layoutManager = new LinearLayoutManager(this);
 
+        recyclerView =  findViewById(R.id.recycleViewContainer);
+        recyclerView.setHasFixedSize(true);
+        //recyclerView.setItemViewCacheSize(20);
+        recyclerView.setDrawingCacheEnabled(true);
+        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        recyclerView.setNestedScrollingEnabled(false);
+
+
         recyclerView.setLayoutManager(layoutManager);
 
-        customRecyclerAdapter = new CustomRecyclerAdapter(this, getMember());
+
+
+
+
+        /*customRecyclerAdapter = new CustomRecyclerAdapter(this, getMember());
 
         customRecyclerAdapter.setHasStableIds(true);
 
@@ -80,7 +93,7 @@ public class ActiveMembers extends AppCompatActivity implements SearchView.OnQue
 
 
 
-        filterResult = customRecyclerAdapter.getFilter();
+        filterResult = customRecyclerAdapter.getFilter();*/
 
 
 
@@ -96,18 +109,7 @@ public class ActiveMembers extends AppCompatActivity implements SearchView.OnQue
       //  filterResult = adapter.getFilter();
 
 
-        // Define the Toolbar as the new Actionbar
-        Toolbar myToolbar = findViewById(R.id.activemembers_appbar);
-        setSupportActionBar(myToolbar);
 
-        // Get a support ActionBar corresponding to this toolbar
-        getSupportActionBar().setTitle("At the Gym");
-
-        // Enable the Up button
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        //Change the back button on the action bar to a custom drawable
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_home);
 
         //getSupportActionBar().setLogo(R.drawable.ic_fitness);  TO ATTACH A LOGO TO THE ACTIVITY NAME
 
@@ -152,11 +154,15 @@ public class ActiveMembers extends AppCompatActivity implements SearchView.OnQue
 
 
 
+
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
 
-
-
+        new GenerateImageasync(customRecyclerAdapter).execute();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
@@ -249,6 +255,53 @@ public class ActiveMembers extends AppCompatActivity implements SearchView.OnQue
 
         return memberArrayList;
     }
+
+    public  class GenerateImageasync extends AsyncTask<Void, Void, CustomRecyclerAdapter> {
+
+        CustomRecyclerAdapter customRecyclerAdapter;
+
+        GenerateImageasync(CustomRecyclerAdapter customRecyclerAdapter){ this.customRecyclerAdapter = customRecyclerAdapter; }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+            mProgressDialog = new ProgressDialog(ActiveMembers.this);
+            mProgressDialog.setTitle("Loading full list...");
+            mProgressDialog.setMessage("Please wait while we load and set the list.");
+            mProgressDialog.setCanceledOnTouchOutside(false);
+            mProgressDialog.show();
+            ActiveProgress =true;
+        }
+
+
+
+        @Override
+        protected CustomRecyclerAdapter doInBackground(Void... voids) {
+
+            customRecyclerAdapter = new CustomRecyclerAdapter(getApplicationContext(), getMember());
+
+
+
+            return customRecyclerAdapter;
+
+        }
+
+        @Override
+        protected void onPostExecute(CustomRecyclerAdapter customRecyclerAdapter) {
+            super.onPostExecute(customRecyclerAdapter);
+
+
+            customRecyclerAdapter.setHasStableIds(true);
+
+            recyclerView.setAdapter(customRecyclerAdapter);
+
+            filterResult = customRecyclerAdapter.getFilter();
+
+            //mProgressDialog.dismiss();
+        }
+    }
+
 
 }
 

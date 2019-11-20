@@ -2,6 +2,7 @@ package com.example.zyed.fitnessapp;
 
 import com.orm.SugarRecord;
 import com.orm.dsl.Ignore;
+import com.orm.dsl.Unique;
 
 /**
  * Created by Z'YED on 24/07/2018.
@@ -14,6 +15,9 @@ public class Goals extends SugarRecord {
     private  Member member;
 
     private String old_actual , old_goal , note;
+
+    @Unique
+    private Long id;
 
     public Goals(){}
 
@@ -32,6 +36,18 @@ public class Goals extends SugarRecord {
         this.old_actual = old_actual;
         this.old_goal = old_goal;
         this.note=note;
+    }
+
+    @Override
+    public Long getId() {
+        return id;
+    }
+
+    @Override
+    public void setId(Long id) {
+        // Use "super" to overwrite
+        super.setId(id);
+        this.id = id;
     }
 
     public String getTitle() {

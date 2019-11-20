@@ -165,6 +165,17 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:padding="10dp"
+                android:src="@drawable/path_1484"
+                app:layout_constraintBottom_toBottomOf="@+id/error_dialog_icon"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintLeft_toLeftOf="@+id/guideline67"
+                app:layout_constraintRight_toRightOf="@+id/guideline69"
+                app:layout_constraintTop_toTopOf="@+id/error_dialog_icon" />
+
         </android.support.constraint.ConstraintLayout>
 
         <android.support.constraint.Guideline
